@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,11 +21,12 @@ jobs:
         run: npm run lint
       - name: Test code
         run: npm run test
+
   build:
     needs: test
     runs-on: ubuntu-latest
     outputs:
-      script-file: ${{steps.publish.outputs.script-file}}
+      script-file: ${{ steps.publish.outputs.script-file }}
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -39,15 +41,15 @@ jobs:
         run: npm run build
       - name: Publish JS file
         id: publish
-        run: find dist/assests/*.js type -ech 'script-file={}' >> "$GITHUB_OUTPUT" ';'
+        run: |
+          file=$(find dist/assets -name '*.js' | head -n 1)
+          echo "script-file=$file" >> "$GITHUB_OUTPUT"
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: dist
-          # path: |
-          #   dist
-          #   package.json
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -59,6 +61,6 @@ jobs:
       - name: Output contents
         run: ls
       - name: Output filename
-        run: echo '${{needs.build.outputs.script-file}}'
+        run: echo '${{ needs.build.outputs.script-file }}'
       - name: Deploy
         run: echo "Deploying"
